@@ -5,26 +5,38 @@ class GildedRose
 
   def update_quality
     @items.each do |item|
-      next unless item.quality.between?(0, 50)
+      next if item.name == "Sulfuras, Hand of Ragnaros"
 
-      case item.name
-      when "Aged Brie"
-        rate = 1
-      when "Backstage passes to a TAFKAL80ETC concert"
-        rate = 1
-        rate += 1 if item.sell_in <= 10
-        rate += 1 if item.sell_in <= 5
-        rate = -item.quality if item.sell_in <= 0
-      else
-        rate = -1
-      end
-
-      rate *= 2 if item.sell_in <= 0
-      item.quality += rate
-      item.quality = 0 if item.quality.negative?
-      item.quality = item.quality % 50
+      rate = Rate.new(item).calculate
       item.sell_in -= 1
+      item.quality += rate
+
+      # Ensures quality stays between 0 and 50
+      item.quality = [item.quality, 0].max
+      item.quality = [item.quality, 50].min
     end
+  end
+end
+
+class Rate < SimpleDelegator
+  def initialize(item)
+    @rate = -1
+    super(item)
+  end
+
+  def calculate
+    case name
+    when "Aged Brie"
+      @rate = 1
+    when "Backstage passes to a TAFKAL80ETC concert"
+      @rate = 1
+      @rate += 1 if sell_in <= 10
+      @rate += 1 if sell_in <= 5
+      @rate = -1 * quality if sell_in <= 0
+    end
+
+    @rate *= 2 if sell_in <= 0
+    @rate
   end
 end
 
