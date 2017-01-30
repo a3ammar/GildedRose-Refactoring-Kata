@@ -33,6 +33,9 @@ class Rate < SimpleDelegator
       @rate += 1 if sell_in <= 10
       @rate += 1 if sell_in <= 5
       @rate = -1 * quality if sell_in <= 0
+    when /\AConjured.*/
+      @rate *= 2
+      puts "HI #{@rate}"
     end
 
     @rate *= 2 if sell_in <= 0
